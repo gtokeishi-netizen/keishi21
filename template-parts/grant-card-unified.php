@@ -1,13 +1,13 @@
 <?php
 /**
- * Grant Card Unified - Clean & Professional Edition
+ * Grant Card Unified - Minna Bank Style Ultra Modern Edition
  * template-parts/grant-card-unified.php
  * 
- * シンプルでスタイリッシュな統一カードテンプレート
- * 機能は完全保持、デザインをクリーンに刷新
+ * みんなの銀行風モダンデザイン・地域処理改良版
+ * ACF・タクソノミー完全連携・47都道府県対応
  * 
- * @package Grant_Insight_Clean
- * @version 10.0.0
+ * @package Grant_Insight_Minna_Style
+ * @version 12.0.0
  */
 
 // セキュリティチェック
@@ -118,7 +118,7 @@ if ($grant_data['deadline_date']) {
     }
 }
 
-// タクソノミーデータ（single-grant.phpと統一）
+// 🚀 改良されたタクソノミーデータ処理（47都道府県対応）
 $taxonomies = array(
     'categories' => get_the_terms($post_id, 'grant_category'),
     'prefectures' => get_the_terms($post_id, 'grant_prefecture'),
@@ -127,8 +127,69 @@ $taxonomies = array(
 );
 
 $main_category = ($taxonomies['categories'] && !is_wp_error($taxonomies['categories'])) ? $taxonomies['categories'][0]->name : '';
-$main_prefecture = ($taxonomies['prefectures'] && !is_wp_error($taxonomies['prefectures'])) ? $taxonomies['prefectures'][0] : null;
-$prefecture = $main_prefecture ? $main_prefecture->name : '全国';
+
+// 🌟 地域表示の改良ロジック（47都道府県チェック）
+$region_display = '';
+if ($taxonomies['prefectures'] && !is_wp_error($taxonomies['prefectures'])) {
+    $prefectures = $taxonomies['prefectures'];
+    $prefecture_count = count($prefectures);
+    
+    // 47都道府県すべてが登録されている場合
+    if ($prefecture_count >= 47) {
+        $region_display = '全国';
+    } 
+    // 複数の都道府県が登録されている場合（20以上で全国扱い）
+    elseif ($prefecture_count >= 20) {
+        $region_display = '全国';
+    }
+    // 複数の都道府県が登録されている場合（3-19個）
+    elseif ($prefecture_count > 3) {
+        $region_display = $prefecture_count . '都道府県';
+    }
+    // 複数の都道府県が登録されている場合（2-3個）
+    elseif ($prefecture_count > 1) {
+        $region_names = array();
+        foreach ($prefectures as $pref) {
+            $region_names[] = $pref->name;
+        }
+        $region_display = implode('・', array_slice($region_names, 0, 2));
+        if ($prefecture_count > 2) {
+            $region_display .= ' 他' . ($prefecture_count - 2) . '件';
+        }
+    }
+    // 単一都道府県
+    else {
+        $main_prefecture = $prefectures[0];
+        $prefecture_name = $main_prefecture->name;
+        
+        // 市町村がある場合はより詳細に表示
+        if ($taxonomies['municipalities'] && !is_wp_error($taxonomies['municipalities'])) {
+            $municipalities = $taxonomies['municipalities'];
+            $municipality_count = count($municipalities);
+            
+            if ($municipality_count > 3) {
+                $region_display = $prefecture_name . '内' . $municipality_count . '市町村';
+            } elseif ($municipality_count > 1) {
+                $muni_names = array();
+                foreach ($municipalities as $muni) {
+                    $muni_names[] = $muni->name;
+                }
+                $region_display = implode('・', array_slice($muni_names, 0, 2));
+                if ($municipality_count > 2) {
+                    $region_display .= ' 他' . ($municipality_count - 2) . '件';
+                }
+            } else {
+                $region_display = $municipalities[0]->name;
+            }
+        } else {
+            $region_display = $prefecture_name;
+        }
+    }
+} else {
+    $region_display = '全国';
+}
+
+$prefecture = $region_display;
 $main_industry = '';
 
 // 金額フォーマット（single-grant.phpと完全同一）
@@ -195,9 +256,9 @@ static $assets_loaded = false;
 <?php if (!$assets_loaded): $assets_loaded = true; ?>
 
 <style>
-/* Clean Grant Card Design System - Full Monochrome Edition */
+/* 🏛️ Minna Bank Style - Ultra Modern Card Design System */
 
-/* グリッド親コンテナのサイズ制約 */
+/* グリッド親コンテナのサイズ制約 - みんなの銀行風改良版 */
 .grants-grid,
 .grants-list,
 .grant-cards-container {
@@ -205,119 +266,165 @@ static $assets_loaded = false;
     max-width: 100%;
     overflow-x: hidden;
     box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
 }
 
 .grants-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 1.75rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 @media (max-width: 1200px) {
     .grants-grid {
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+        gap: 1.5rem;
     }
 }
 
 @media (max-width: 900px) {
     .grants-grid {
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
         gap: 1.25rem;
-        padding: 1.25rem;
+        padding: 1.5rem;
     }
 }
 
 :root {
-    /* Core Colors - Pure Monochrome System */
-    --clean-primary: #000000;          /* Pure black for primary actions */
-    --clean-primary-light: #262626;    /* Dark gray for light primary */
-    --clean-primary-dark: #000000;     /* Pure black for dark primary */
-    --clean-secondary: #525252;        /* Medium gray for secondary elements */
-    --clean-accent: #171717;           /* Very dark gray for accents */
+    /* 🏛️ Minna Bank Inspired Color System */
+    --minna-primary: #0066ff;          /* みんなの銀行メインブルー */
+    --minna-primary-light: #4d94ff;    /* ライトブルー */
+    --minna-primary-dark: #0052cc;     /* ダークブルー */
+    --minna-secondary: #00cc99;        /* アクセントグリーン */
+    --minna-accent: #ff6b6b;           /* ポイントレッド */
     
-    /* Monochrome Base Colors */
-    --clean-white: #ffffff;            /* Pure white */
-    --clean-gray-50: #fafafa;          /* Lightest gray */
-    --clean-gray-100: #f5f5f5;         /* Very light gray */
-    --clean-gray-200: #e5e5e5;         /* Light gray */
-    --clean-gray-300: #d4d4d4;         /* Medium light gray */
-    --clean-gray-400: #a3a3a3;         /* Medium gray */
-    --clean-gray-500: #737373;         /* Gray */
-    --clean-gray-600: #525252;         /* Dark gray */
-    --clean-gray-700: #404040;         /* Darker gray */
-    --clean-gray-800: #262626;         /* Very dark gray */
-    --clean-gray-900: #171717;         /* Almost black */
+    /* Modern Color Palette */
+    --minna-white: #ffffff;            /* Pure white */
+    --minna-gray-50: #fafbfc;          /* Super light gray */
+    --minna-gray-100: #f4f6f8;         /* Very light gray */
+    --minna-gray-200: #e8ecf0;         /* Light gray */
+    --minna-gray-300: #d2d8de;         /* Medium light gray */
+    --minna-gray-400: #9aa5b1;         /* Medium gray */
+    --minna-gray-500: #6c757d;         /* Gray */
+    --minna-gray-600: #495057;         /* Dark gray */
+    --minna-gray-700: #343a40;         /* Darker gray */
+    --minna-gray-800: #212529;         /* Very dark gray */
+    --minna-gray-900: #1a1d23;         /* Almost black */
     
-    /* Semantic Colors - Minimal Use */
-    --clean-success: #22c55e;          /* Green (minimal use) */
-    --clean-warning: #f59e0b;          /* Orange (minimal use) */
-    --clean-danger: #ef4444;           /* Red (minimal use) */
-    --clean-info: #000000;             /* Black for info */
+    /* Status Colors - みんなの銀行風 */
+    --minna-success: #28a745;          /* Success green */
+    --minna-warning: #ffc107;          /* Warning yellow */
+    --minna-danger: #dc3545;           /* Danger red */
+    --minna-info: #17a2b8;             /* Info cyan */
     
-    /* Gradients - Pure Monochrome */
-    --clean-gradient-primary: linear-gradient(135deg, #000000 0%, #262626 100%);
-    --clean-gradient-light: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-    --clean-gradient-secondary: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%);
-    --clean-gradient-dark: linear-gradient(135deg, #262626 0%, #171717 100%);
-    --clean-gradient-accent: linear-gradient(135deg, #171717 0%, #000000 100%);
+    /* Premium Gradients - みんなの銀行スタイル */
+    --minna-gradient-primary: linear-gradient(135deg, #0066ff 0%, #0052cc 50%, #003d99 100%);
+    --minna-gradient-secondary: linear-gradient(135deg, #00cc99 0%, #00b386 100%);
+    --minna-gradient-light: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    --minna-gradient-dark: linear-gradient(135deg, #343a40 0%, #212529 100%);
+    --minna-gradient-accent: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    --minna-gradient-card: linear-gradient(145deg, #ffffff 0%, #fafbfc 50%, #f4f6f8 100%);
     
-    /* Monochrome Shadows */
-    --clean-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --clean-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    --clean-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-    --clean-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    /* Premium Shadows - みんなの銀行風 */
+    --minna-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --minna-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --minna-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --minna-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --minna-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.15);
+    --minna-shadow-blue: 0 8px 32px rgba(0, 102, 255, 0.3);
+    --minna-shadow-green: 0 8px 32px rgba(0, 204, 153, 0.3);
     
-    /* Border Radius - Clean & Modern */
-    --clean-radius-sm: 0.25rem;
-    --clean-radius-md: 0.5rem;
-    --clean-radius-lg: 0.75rem;
-    --clean-radius-xl: 1rem;
-    --clean-radius-2xl: 1.5rem;
+    /* Modern Border Radius */
+    --minna-radius-xs: 0.125rem;
+    --minna-radius-sm: 0.375rem;
+    --minna-radius-md: 0.75rem;
+    --minna-radius-lg: 1rem;
+    --minna-radius-xl: 1.25rem;
+    --minna-radius-2xl: 1.875rem;
+    --minna-radius-3xl: 2.5rem;
     
-    /* Transitions */
-    --clean-transition: all 0.15s ease-in-out;
-    --clean-transition-slow: all 0.3s ease-in-out;
+    /* Premium Transitions */
+    --minna-transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --minna-transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --minna-transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     
     /* Typography Colors */
-    --clean-text-primary: #171717;     /* Primary text (almost black) */
-    --clean-text-secondary: #525252;   /* Secondary text */
-    --clean-text-muted: #737373;       /* Muted text */
-    --clean-text-light: #a3a3a3;       /* Light text */
+    --minna-text-primary: #1a1d23;     /* Primary text */
+    --minna-text-secondary: #495057;   /* Secondary text */
+    --minna-text-muted: #6c757d;       /* Muted text */
+    --minna-text-light: #9aa5b1;       /* Light text */
+    --minna-text-inverse: #ffffff;     /* White text */
     
     /* Border Colors */
-    --clean-border-light: #e5e5e5;     /* Light border */
-    --clean-border-medium: #d4d4d4;    /* Medium border */
-    --clean-border-dark: #a3a3a3;      /* Dark border */
-    --clean-border-primary: #000000;   /* Primary border (black) */
+    --minna-border-light: #e8ecf0;     /* Light border */
+    --minna-border-medium: #d2d8de;    /* Medium border */
+    --minna-border-dark: #9aa5b1;      /* Dark border */
+    --minna-border-primary: #0066ff;   /* Primary border */
 }
 
 	
 
 /* ============================================
-   カード表示モード - コンパクト版（縦サイズを小さく）
+   🏛️ カード表示モード - みんなの銀行風モダンデザイン
 ============================================ */
 .grant-view-card .grant-card-unified {
     position: relative;
     width: 100%;
     max-width: 100%;
-    min-height: 320px; /* 420px から 320px に縮小 */
-    background: var(--clean-white);
-    border: 2px solid var(--clean-gray-300);
-    border-radius: var(--clean-radius-xl);
+    min-height: 380px;
+    background: var(--minna-gradient-card);
+    border: 1px solid var(--minna-border-light);
+    border-radius: var(--minna-radius-2xl);
     overflow: hidden;
-    transition: var(--clean-transition-slow);
+    transition: var(--minna-transition-smooth);
     cursor: default;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--minna-shadow-md);
+    backdrop-filter: blur(20px);
+    position: relative;
 }
 
+/* みんなの銀行風ホバーエフェクト - リッチなアニメーション */
 .grant-view-card .grant-card-unified:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: var(--clean-gray-500);
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: var(--minna-shadow-xl), var(--minna-shadow-blue);
+    border-color: var(--minna-primary);
+    background: linear-gradient(145deg, #ffffff 0%, #f0f7ff 30%, #e6f3ff 70%, #ffffff 100%);
+}
+
+/* みんなの銀行風グラデーションオーバーレイ */
+.grant-view-card .grant-card-unified::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--minna-gradient-primary);
+    z-index: 1;
+}
+
+/* プレミアムグロー効果 */
+.grant-view-card .grant-card-unified::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: var(--minna-gradient-primary);
+    border-radius: var(--minna-radius-2xl);
+    opacity: 0;
+    z-index: -1;
+    transition: var(--minna-transition-smooth);
+}
+
+.grant-view-card .grant-card-unified:hover::after {
+    opacity: 0.1;
 }
 
 /* ============================================
@@ -475,48 +582,85 @@ static $assets_loaded = false;
    共通スタイル
 ============================================ */
 
-/* ステータスヘッダー */
+/* 🏛️ みんなの銀行風ステータスヘッダー */
 .grant-status-header {
     position: relative;
-    height: 3rem;
-    background: var(--clean-gradient-primary);
+    height: 3.5rem;
+    background: var(--minna-gradient-primary);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1.5rem;
+    padding: 0 1.75rem;
     overflow: hidden;
+    border-radius: var(--minna-radius-2xl) var(--minna-radius-2xl) 0 0;
+}
+
+/* 動的グラデーション背景 */
+.grant-status-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
 }
 
 .grant-status-header.status--closed {
-    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    background: var(--minna-gradient-dark);
 }
 
 .grant-status-header.status--urgent {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: var(--minna-gradient-accent);
+    animation: pulse-urgent 2s ease-in-out infinite;
+}
+
+@keyframes pulse-urgent {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; }
 }
 
 .grant-status-badge {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: var(--clean-white);
-    font-size: 0.875rem;
-    font-weight: 600;
+    gap: 0.75rem;
+    color: var(--minna-text-inverse);
+    font-size: 0.9375rem;
+    font-weight: 700;
     letter-spacing: 0.025em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.grant-status-badge::before {
+    content: '●';
+    animation: pulse-dot 2s ease-in-out infinite;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
 .grant-deadline-indicator {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0.75rem;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 1rem;
-    color: var(--clean-white);
-    font-size: 0.75rem;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    gap: 0.625rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: var(--minna-radius-2xl);
+    color: var(--minna-text-inverse);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* カードコンテンツ */
@@ -528,38 +672,49 @@ static $assets_loaded = false;
     overflow: hidden;
 }
 
-/* タイトルセクション - 改良版 */
+/* 🏛️ みんなの銀行風タイトルセクション */
 .grant-title-section {
-    margin-bottom: 1rem;
-    padding-right: 6rem;
+    margin-bottom: 1.25rem;
+    padding: 1.5rem 1.75rem 0;
     position: relative;
 }
 
 .grant-category-tag {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    background: var(--clean-gradient-primary);
-    color: var(--clean-white);
-    border-radius: var(--clean-radius-2xl);
-    font-size: 0.75rem;
-    font-weight: 600;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: var(--minna-gradient-secondary);
+    color: var(--minna-text-inverse);
+    border-radius: var(--minna-radius-3xl);
+    font-size: 0.8125rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.75rem;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.075em;
+    margin-bottom: 1rem;
+    box-shadow: var(--minna-shadow-sm), var(--minna-shadow-green);
     position: relative;
     z-index: 5;
-    max-width: calc(100% - 120px);
+    transition: var(--minna-transition-smooth);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.grant-category-tag:hover {
+    transform: scale(1.05);
+    box-shadow: var(--minna-shadow-md), var(--minna-shadow-green);
+}
+
+.grant-category-tag::before {
+    content: '◆';
+    font-size: 0.75rem;
+    opacity: 0.9;
 }
 
 .grant-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    line-height: 1.4;
-    color: var(--clean-gray-900);
+    font-size: 1.1875rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--minna-text-primary);
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -567,55 +722,67 @@ static $assets_loaded = false;
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: auto;
-    max-height: 3.5rem;
+    max-height: 4rem;
+    position: relative;
+    padding-right: 1rem;
 }
 
 .grant-title a {
     color: inherit;
     text-decoration: none;
-    transition: var(--clean-transition);
+    transition: var(--minna-transition-fast);
+    position: relative;
 }
 
 .grant-title a:hover {
-    color: var(--clean-gray-800);
+    color: var(--minna-primary);
+}
+
+/* タイトル下のアンダーライン効果 */
+.grant-title a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--minna-gradient-primary);
+    transition: var(--minna-transition-smooth);
+}
+
+.grant-title a:hover::after {
+    width: 100%;
 }
 
 /* ============================================
-   トレーディングカード風 AI要約セクション - 全面表示版（縦サイズ拡大）
+   🏛️ みんなの銀行風 AI要約セクション - プレミアムカード風
 ============================================ */
 .grant-ai-summary {
     position: relative;
-    padding: 2rem;
-    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 30%, #ffffff 70%, #f0f9ff 100%);
-    border: 4px solid var(--clean-gray-900);
-    border-radius: var(--clean-radius-2xl);
-    margin-bottom: 1.5rem; /* 2rem から 1.5rem に縮小 */
-    min-height: 180px; /* 160px から 180px に拡大 */
-    max-height: 240px; /* 200px から 240px に拡大 */
+    padding: 0;
+    background: linear-gradient(145deg, #ffffff 0%, #fafbfc 50%, #f4f6f8 100%);
+    border: 2px solid var(--minna-border-light);
+    border-radius: var(--minna-radius-2xl);
+    margin: 0 1.75rem 1.5rem;
+    min-height: 200px;
+    max-height: 280px;
     overflow: hidden;
-    transition: var(--clean-transition-slow);
-    box-shadow: 
-        0 12px 35px rgba(0, 0, 0, 0.15),
-        inset 0 2px 0 rgba(255, 255, 255, 0.9),
-        0 0 0 2px rgba(0, 0, 0, 0.08),
-        inset 0 -2px 8px rgba(0, 0, 0, 0.05);
+    transition: var(--minna-transition-smooth);
+    box-shadow: var(--minna-shadow-md);
     cursor: default;
     z-index: 5;
-    flex: 1; /* 利用可能なスペースを最大限使用 */
+    flex: 1;
+    backdrop-filter: blur(20px);
 }
 
-/* トレーディングカード風ホバーエフェクト - スクロール機能付き */
+/* みんなの銀行風ホバーエフェクト - エレガントアニメーション */
 .grant-ai-summary:hover {
-    transform: translateY(-8px) scale(1.03) rotateX(3deg);
-    max-height: 280px; /* 250px から 280px に拡大 */
+    transform: translateY(-4px) scale(1.02);
+    max-height: 320px;
     overflow-y: auto;
-    box-shadow: 
-        0 20px 45px rgba(0, 0, 0, 0.25),
-        0 8px 20px rgba(0, 0, 0, 0.15),
-        inset 0 3px 0 rgba(255, 255, 255, 0.95),
-        0 0 0 3px rgba(0, 0, 0, 0.1);
-    border-color: var(--clean-gray-700);
-    background: linear-gradient(145deg, #ffffff 0%, #f0f9ff 25%, #ffffff 50%, #f8fafc 75%, #ffffff 100%);
+    box-shadow: var(--minna-shadow-xl), var(--minna-shadow-blue);
+    border-color: var(--minna-primary);
+    background: linear-gradient(145deg, #ffffff 0%, #f0f7ff 30%, #e6f3ff 70%, #ffffff 100%);
     z-index: 10;
 }
 
@@ -649,27 +816,25 @@ static $assets_loaded = false;
     opacity: 0.6;
 }
 
-/* トレーディングカード風ラベル - 改良版 */
+/* みんなの銀行風AIラベル - モダンデザイン */
 .grant-ai-summary-label {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    color: var(--clean-white);
-    background: linear-gradient(135deg, #000000 0%, #1f2937 50%, #374151 100%);
-    font-size: 0.8rem;
-    font-weight: 900;
-    margin: -1.8rem -1.8rem 1.25rem -1.8rem;
-    padding: 0.9rem 1.8rem;
+    color: var(--minna-text-inverse);
+    background: var(--minna-gradient-primary);
+    font-size: 0.875rem;
+    font-weight: 800;
+    margin: 0 0 1.5rem 0;
+    padding: 1rem 1.5rem;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     position: relative;
-    border-bottom: 3px solid rgba(0, 0, 0, 0.15);
-    box-shadow: 
-        inset 0 -2px 0 rgba(255, 255, 255, 0.3),
-        0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--minna-shadow-sm);
     z-index: 3;
-    border-radius: var(--clean-radius-2xl) var(--clean-radius-2xl) 0 0;
+    border-radius: var(--minna-radius-2xl) var(--minna-radius-2xl) 0 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* アイコン：白黒のブレインアイコン */
@@ -696,26 +861,26 @@ static $assets_loaded = false;
     }
 }
 
-/* スクロール可能なAI要約テキスト - 全面表示版 */
+/* みんなの銀行風AI要約テキスト - 読みやすいデザイン */
 .grant-ai-summary-text {
-    color: var(--clean-gray-900);
-    font-size: 1.05rem; /* 1rem から 1.05rem に拡大 */
-    line-height: 1.7;
+    color: var(--minna-text-primary);
+    font-size: 0.9375rem;
+    line-height: 1.6;
     margin: 0;
-    font-weight: 600;
-    max-height: 140px; /* 100px から 140px に拡大 */
+    font-weight: 500;
+    max-height: 120px;
     overflow-y: hidden;
-    padding-right: 0.75rem;
+    padding: 0 1.5rem 1.5rem;
     position: relative;
     z-index: 2;
-    transition: var(--clean-transition);
+    transition: var(--minna-transition-smooth);
 }
 
-/* ホバー時にスクロール可能に */
+/* ホバー時にスクロール可能に - スムーズアニメーション */
 .grant-ai-summary:hover .grant-ai-summary-text {
-    max-height: 220px; /* 180px から 220px に拡大 */
+    max-height: 200px;
     overflow-y: auto;
-    padding-right: 0.5rem;
+    padding-right: 1rem;
 }
 
 /* カスタムスクロールバー - トレーディングカード風 */
@@ -741,61 +906,43 @@ static $assets_loaded = false;
 }
 
 /* ============================================
-   トレーディングカード風情報グリッド - 助成額と地域のみ
+   🏛️ みんなの銀行風情報グリッド - エレガントデザイン
 ============================================ */
 .grant-info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
-    padding: 0.5rem 0;
+    gap: 1rem;
+    margin: 0 1.75rem 1.5rem;
+    padding: 0;
     position: relative;
 }
 
-/* グリッドの装飾線 */
-.grant-info-grid::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10%;
-    right: 10%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent 0%, var(--clean-gray-400) 20%, var(--clean-gray-800) 50%, var(--clean-gray-400) 80%, transparent 100%);
-    border-radius: 1px;
-}
-
-/* トレーディングカード風情報アイテム - 改良版 */
+/* みんなの銀行風情報アイテム - モダンカードデザイン */
 .grant-info-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem 1.25rem;
-    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 30%, #ffffff 70%, #f5f8fa 100%);
-    border: 3px solid var(--clean-gray-900);
-    border-radius: var(--clean-radius-xl);
-    transition: var(--clean-transition-slow);
+    padding: 1.25rem 1rem;
+    background: var(--minna-gradient-card);
+    border: 1px solid var(--minna-border-light);
+    border-radius: var(--minna-radius-xl);
+    transition: var(--minna-transition-smooth);
     position: relative;
     overflow: hidden;
-    min-height: 100px;
+    min-height: 90px;
     text-align: center;
-    box-shadow: 
-        0 6px 18px rgba(0, 0, 0, 0.12),
-        inset 0 2px 0 rgba(255, 255, 255, 0.9),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--minna-shadow-sm);
     cursor: default;
+    backdrop-filter: blur(10px);
 }
 
-/* トレーディングカード風ホバーエフェクト - 改良版 */
+/* みんなの銀行風ホバーエフェクト - エレガント */
 .grant-info-item:hover {
-    transform: translateY(-6px) scale(1.05) rotateY(2deg);
-    box-shadow: 
-        0 12px 32px rgba(0, 0, 0, 0.2),
-        0 6px 16px rgba(0, 0, 0, 0.12),
-        inset 0 3px 0 rgba(255, 255, 255, 0.95),
-        0 0 0 2px rgba(0, 0, 0, 0.08);
-    border-color: var(--clean-gray-600);
-    background: linear-gradient(145deg, #ffffff 0%, #f0f9ff 25%, #ffffff 50%, #f8fafc 75%, #ffffff 100%);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--minna-shadow-lg), var(--minna-shadow-blue);
+    border-color: var(--minna-primary);
+    background: linear-gradient(145deg, #ffffff 0%, #f0f7ff 50%, #ffffff 100%);
     z-index: 3;
 }
 
@@ -833,66 +980,55 @@ static $assets_loaded = false;
     gap: 0.25rem;
 }
 
-/* トレーディングカード風ラベル - 改良版 */
+/* みんなの銀行風ラベル - モダンデザイン */
 .grant-info-label {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    font-size: 0.7rem;
-    font-weight: 900;
-    color: var(--clean-gray-800);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--minna-text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.075em;
     margin-bottom: 0.75rem;
     position: relative;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%);
-    padding: 0.375rem 0.75rem;
-    border-radius: var(--clean-radius-2xl);
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-/* アイコン追加 - 白黒モノクローム */
+/* みんなの銀行風アイコン */
 .grant-info-label[data-type="amount"]::before {
-    content: '●';
-    font-size: 0.8rem;
-    color: var(--clean-gray-800);
-    margin-right: 0.5rem;
+    content: '💰';
+    font-size: 1rem;
+    filter: grayscale(0);
     display: inline-block;
 }
 
 .grant-info-label[data-type="region"]::before {
-    content: '▲';
-    font-size: 0.8rem;
-    color: var(--clean-gray-800);
-    margin-right: 0.5rem;
+    content: '📍';
+    font-size: 1rem;
+    filter: grayscale(0);
     display: inline-block;
 }
 
-/* トレーディングカード風値表示 - 改良版 */
+/* みんなの銀行風値表示 */
 .grant-info-value {
     display: block;
-    font-size: 1rem;
-    font-weight: 900;
-    color: var(--clean-gray-900);
-    line-height: 1.3;
+    font-size: 1.0625rem;
+    font-weight: 800;
+    color: var(--minna-text-primary);
+    line-height: 1.25;
     word-wrap: break-word;
     overflow-wrap: break-word;
     text-align: center;
     position: relative;
     z-index: 2;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--clean-radius-md);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
 }
 
-/* アクションフッター - 改良版 */
+/* 🏛️ みんなの銀行風アクションフッター */
 .grant-card-footer {
-    padding: 1.25rem;
-    background: var(--clean-white);
-    border-top: 2px solid var(--clean-gray-200);
+    padding: 1.5rem 1.75rem;
+    background: var(--minna-white);
+    border-top: 1px solid var(--minna-border-light);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -901,6 +1037,7 @@ static $assets_loaded = false;
     z-index: 50;
     margin-top: auto;
     pointer-events: auto;
+    border-radius: 0 0 var(--minna-radius-2xl) var(--minna-radius-2xl);
 }
 
 .grant-actions {
@@ -910,19 +1047,20 @@ static $assets_loaded = false;
     flex-wrap: wrap;
 }
 
+/* 🏛️ みんなの銀行風ボタンデザイン */
 .grant-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    padding: 0.75rem 1.25rem;
-    min-height: 45px;
-    border: 2px solid transparent;
-    border-radius: 2rem;
-    font-size: 0.875rem;
-    font-weight: 600;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    min-height: 48px;
+    border: 1px solid transparent;
+    border-radius: var(--minna-radius-3xl);
+    font-size: 0.9375rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: var(--clean-transition-slow);
+    transition: var(--minna-transition-smooth);
     text-decoration: none;
     white-space: nowrap;
     position: relative;
@@ -930,58 +1068,56 @@ static $assets_loaded = false;
     z-index: 100;
     flex: 1;
     min-width: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--minna-shadow-sm);
     pointer-events: auto;
+    letter-spacing: 0.025em;
 }
 
-/* 詳細ボタン - 改良版 */
+/* プライマリボタン - みんなの銀行風 */
 .grant-btn--primary {
-    background: var(--clean-gradient-primary);
-    color: var(--clean-white);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border: 2px solid var(--clean-gray-800);
+    background: var(--minna-gradient-primary);
+    color: var(--minna-text-inverse);
+    border: 1px solid var(--minna-primary);
+    box-shadow: var(--minna-shadow-md), var(--minna-shadow-blue);
 }
 
 .grant-btn--primary:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    background: var(--clean-gradient-dark);
-    border-color: var(--clean-gray-900);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--minna-shadow-lg), var(--minna-shadow-blue);
+    background: linear-gradient(135deg, #0052cc 0%, #003d99 50%, #002966 100%);
 }
 
+/* セカンダリボタン - みんなの銀行風 */
 .grant-btn--secondary {
-    background: var(--clean-white);
-    color: var(--clean-gray-900);
-    border: 2px solid var(--clean-gray-400);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--minna-white);
+    color: var(--minna-primary);
+    border: 2px solid var(--minna-primary);
+    box-shadow: var(--minna-shadow-sm);
 }
 
 .grant-btn--secondary:hover {
-    background: var(--clean-gradient-primary);
-    color: var(--clean-white);
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: var(--clean-gray-800);
+    background: var(--minna-gradient-primary);
+    color: var(--minna-text-inverse);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--minna-shadow-md), var(--minna-shadow-blue);
 }
 
-/* AI質問ボタン - 改良版 */
+/* AIボタン - みんなの銀行風 */
 .grant-btn--ai {
-    background: var(--clean-gradient-accent);
-    color: var(--clean-white);
-    border: 2px solid var(--clean-gray-800);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    background: var(--minna-gradient-secondary);
+    color: var(--minna-text-inverse);
+    border: 1px solid var(--minna-secondary);
+    box-shadow: var(--minna-shadow-md), var(--minna-shadow-green);
 }
 
 .grant-btn--ai:hover {
-    background: var(--clean-gradient-primary);
-    color: var(--clean-white);
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    border-color: var(--clean-gray-900);
+    background: linear-gradient(135deg, #00b386 0%, #009973 100%);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--minna-shadow-lg), var(--minna-shadow-green);
 }
 
 .grant-btn--ai:focus {
-    outline: 2px solid var(--clean-gray-800);
+    outline: 2px solid var(--minna-secondary);
     outline-offset: 2px;
 }
 
@@ -1630,20 +1766,22 @@ emoji,
     color: var(--clean-gray-900);
 }
 
-/* レスポンシブ対応 - 改良版 */
+/* 🏛️ みんなの銀行風レスポンシブ対応 */
 @media (max-width: 768px) {
     .grants-grid {
         grid-template-columns: 1fr;
         padding: 1rem;
-        gap: 1.25rem;
+        gap: 1rem;
+        background: var(--minna-gray-50);
     }
     
     .grant-view-card .grant-card-unified {
         height: auto;
-        min-height: auto;
+        min-height: 320px;
         max-width: 100%;
-        border-width: 2px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-width: 1px;
+        box-shadow: var(--minna-shadow-md);
+        margin-bottom: 0.5rem;
     }
     
     .grant-info-grid {
@@ -2812,7 +2950,28 @@ document.head.appendChild(grantCardStyles);
             </div>
             <?php endif; ?>
             
-            <!-- 情報グリッドをホバー時のみ表示に変更 -->
+            <!-- 🏛️ みんなの銀行風情報グリッド - 助成額と地域表示 -->
+            <div class="grant-info-grid">
+                <!-- 助成金額 -->
+                <div class="grant-info-item">
+                    <div class="grant-info-content">
+                        <div class="grant-info-label" data-type="amount">助成額</div>
+                        <div class="grant-info-value">
+                            <?php echo $amount_display ? esc_html($amount_display) : '要確認'; ?>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 対象地域（改良版） -->
+                <div class="grant-info-item">
+                    <div class="grant-info-content">
+                        <div class="grant-info-label" data-type="region">対象地域</div>
+                        <div class="grant-info-value">
+                            <?php echo esc_html($prefecture); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- タグ -->
             <?php if ($main_industry || $application_period): ?>
